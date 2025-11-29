@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Giám sát Động cơ Công nghiệp - Chẩn đoán Lỗi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Hiệu ứng chuyển động mượt mà cho sidebar */
+    .sidebar-item {
+      transition: all 0.3s ease-in-out;
+    }
+    .sidebar-item:hover {
+      transform: translateX(5px);
+    }
+    /* Hiệu ứng cho main content */
+    .main-content {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Đánh dấu mục active */
+    .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      font-weight: bold;
+      border-left: 4px solid #ffffff;
+    }
+    /* Tùy chỉnh bảng lỗi */
+    .error-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .error-table th, .error-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .error-table th {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: bold;
+    }
+    .error-table tr:hover {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl">
+      <div class="p-4 text-2xl font-extrabold border-b border-blue-500/30 flex items-center">
+        <span class="mr-3">⚙️</span>Giám sát Động cơ
+      </div>
+      <nav class="mt-4">
+        <ul>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="home.html" class="flex items-center w-full"><span class="mr-3">🏠</span> Home</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="datarealtime.html" class="flex items-center w-full"><span class="mr-3">📈</span> Dữ Liệu Thời Gian Thực</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item active">
+            <a href="alert.html" class="flex items-center w-full"><span class="mr-3">🔍</span> Chuẩn Đoán Lỗi</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="history.html" class="flex items-center w-full"><span class="mr-3">📋</span> Lịch Sử Sự cố</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="settings.html" class="flex items-center w-full"><span class="mr-3">⚙️</span> Cài Đặt</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="#" onclick="logout()" class="flex items-center w-full"><span class="mr-3">🚪</span> Đăng Xuất</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 p-4 main-content overflow-y-auto h-full">
+      <!-- Header -->
+      <div class="flex flex-col items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">Chuẩn Đoán Lỗi Động Cơ Điện</h1>
+        <p class="text-sm text-gray-500 mt-1">Cập nhật: <span id="current-time" class="font-semibold"></span></p>
+      </div>
+
+      <!-- Bảng hiển thị lỗi -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Danh sách Lỗi/Cảnh báo</h3>
+        <table class="error-table">
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Thiết bị ID</th>
+              <th>Loại lỗi</th>
+              <th>Thông báo</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="error-table-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Hàm đăng xuất
+    function logout() {
+      localStorage.removeItem("username");
+      alert("Đăng xuất thành công!");
+      window.location.href = "login.html";
+    }
+
+    // Cập nhật thời gian hiện tại
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleString('vi-VN');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Ngưỡng chẩn đoán lỗi
+    const THRESHOLDS = {
+      temperature: 80, // °C
+      vibration: 10, // mm/s (cho x, y, z)
+      voltage: { min: 200, max: 250 }, // V
+      current: 15 // A
+    };
+
+    // Hàm kiểm tra lỗi dựa trên dữ liệu cảm biến
+    function detectErrors(data) {
+      const errors = [];
+      data.forEach(item => {
+        const timestamp = new Date(item.timestamp).toLocaleString('vi-VN');
+        const deviceId = item.id || 1; // Giả định device_id (có thể lấy từ API devices nếu cần)
+
+        // Kiểm tra nhiệt độ
+        if (item.temperature > THRESHOLDS.temperature) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Nhiệt độ cao',
+            message: `Nhiệt độ ${item.temperature}°C vượt ngưỡng ${THRESHOLDS.temperature}°C`,
+            status: 'new'
+          });
+        }
+
+        // Kiểm tra rung động
+        if (item.x > THRESHOLDS.vibration) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Rung động X cao',
+            message: `Rung động trục X ${item.x} mm/s vượt ngưỡng ${THRESHOLDS.vibration} mm/s`,
+            status: 'new'
+          });
+        }
+        if (item.y > THRESHOLDS.vibration) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Rung động Y cao',
+            message: `Rung động trục Y ${item.y} mm/s vượt ngưỡng ${THRESHOLDS.vibration} mm/s`,
+            status: 'new'
+          });
+        }
+        if (item.z > THRESHOLDS.vibration) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Rung động Z cao',
+            message: `Rung động trục Z ${item.z} mm/s vượt ngưỡng ${THRESHOLDS.vibration} mm/s`,
+            status: 'new'
+          });
+        }
+
+        // Kiểm tra điện áp
+        if (item.voltage < THRESHOLDS.voltage.min || item.voltage > THRESHOLDS.voltage.max) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Điện áp bất thường',
+            message: `Điện áp ${item.voltage}V ngoài khoảng ${THRESHOLDS.voltage.min}-${THRESHOLDS.voltage.max}V`,
+            status: 'new'
+          });
+        }
+
+        // Kiểm tra dòng điện
+        if (item.current > THRESHOLDS.current) {
+          errors.push({
+            timestamp,
+            device_id: deviceId,
+            alert: 'Quá dòng',
+            message: `Dòng điện ${item.current}A vượt ngưỡng ${THRESHOLDS.current}A`,
+            status: 'new'
+          });
+        }
+      });
+      return errors;
+    }
+
+    // Hàm lấy dữ liệu cảnh báo từ API và hiển thị
+    async function fetchAndDisplayErrors() {
+      try {
+        // Lấy dữ liệu cảm biến
+        const sensorResponse = await fetch('http://127.0.0.1:8000/Lấy dữ liệu từ Database/', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!sensorResponse.ok) {
+          throw new Error('Không thể lấy dữ liệu cảm biến từ API');
+        }
+        const sensorData = await sensorResponse.json();
+
+        // Phát hiện lỗi từ dữ liệu cảm biến
+        const detectedErrors = detectErrors(sensorData);
+
+        // Lấy danh sách cảnh báo từ API
+        const alertsResponse = await fetch('http://127.0.0.1:8000/Lấy danh sách cảnh báo', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!alertsResponse.ok) {
+          throw new Error('Không thể lấy danh sách cảnh báo từ API');
+        }
+        const alerts = await alertsResponse.json();
+
+        // Kết hợp lỗi phát hiện và cảnh báo từ API
+        const allErrors = [...detectedErrors, ...alerts];
+
+        // Hiển thị lỗi trong bảng
+        const tableBody = document.getElementById('error-table-body');
+        tableBody.innerHTML = ''; // Xóa nội dung cũ
+        allErrors.forEach(error => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${error.timestamp}</td>
+            <td>${error.device_id}</td>
+            <td>${error.alert}</td>
+            <td>${error.message}</td>
+            <td>${error.status}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu:', error);
+        alert('Không thể tải dữ liệu từ server. Vui lòng kiểm tra kết nối hoặc server.');
+      }
+    }
+
+    // Gọi hàm lấy và hiển thị lỗi ngay khi tải trang
+    fetchAndDisplayErrors();
+
+    // Cập nhật dữ liệu mỗi 10 giây
+    setInterval(fetchAndDisplayErrors, 10000);
+  </script>
+</body>
+</html>

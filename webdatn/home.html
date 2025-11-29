@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Giám Sát Động Cơ Công nghiệp - Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+  <style>
+    .main-content {
+      height: 100vh;
+      background-image: url('preview-image.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+    .main-content::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+    .header-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
+      color: white;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      z-index: 2;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .dashboard-section {
+      position: relative;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl">
+      <div class="p-4 text-2xl font-extrabold border-b border-blue-500/30 flex items-center">
+        <span class="mr-3">⚙️</span>Giám sát Động cơ
+      </div>
+      <nav class="mt-4">
+        <ul>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="home.html" class="flex items-center"><span class="mr-3">🏠</span> Home</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="datarealtime.html" class="flex items-center"><span class="mr-3">📈</span> Dữ Liệu Thời Gian Thực</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="alert.html" class="flex items-center"><span class="mr-3">🔍</span> Chuẩn Đoán Lỗi</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="history.html" class="flex items-center"><span class="mr-3">📋</span> Lịch Sử Sự cố</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="settings.html" class="flex items-center"><span class="mr-3">⚙️</span> Cài Đặt</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg">
+            <a href="login.html" class="flex items-center"><span class="mr-3">🚪</span> Đăng Xuất</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 main-content">
+      <h1 class="header-text">Giám Sát Trạng Thái Động Cơ</h1>
+
+      <!-- Dashboard -->
+      <div class="dashboard-section">
+        <!-- Cards thống kê nhanh -->
+        <section class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6" id="stats-cards">
+          <div class="bg-white shadow-md rounded-xl p-6 text-center">
+            <h2 class="text-lg font-semibold">Độ rung (RMS)</h2>
+            <p id="vibration" class="text-3xl font-bold text-purple-600">--</p>
+          </div>
+          <div class="bg-white shadow-md rounded-xl p-6 text-center">
+            <h2 class="text-lg font-semibold">Nhiệt độ</h2>
+            <p id="temperature" class="text-3xl font-bold text-orange-500">--</p>
+          </div>
+          <div class="bg-white shadow-md rounded-xl p-6 text-center">
+            <h2 class="text-lg font-semibold">Dòng điện</h2>
+            <p id="current" class="text-3xl font-bold text-green-600">--</p>
+          </div>
+          <div class="bg-white shadow-md rounded-xl p-6 text-center">
+            <h2 class="text-lg font-semibold">Điện áp</h2>
+            <p id="voltage" class="text-3xl font-bold text-blue-500">--</p>
+          </div>
+          <!-- Ô cảnh báo -->
+          <div class="bg-red-100 shadow-md rounded-xl p-6 text-center">
+            <h2 class="text-lg font-semibold">⚠️ Cảnh báo</h2>
+            <p id="systemAlert" class="text-2xl font-bold text-green-600">An toàn</p>
+          </div>
+        </section>
+
+        <!-- Biểu đồ -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white p-6 rounded-xl shadow-md">
+            <h3 class="text-lg font-semibold mb-4">Biểu đồ Điện áp</h3>
+            <canvas id="voltageChart"></canvas>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-md">
+            <h3 class="text-lg font-semibold mb-4">Biểu đồ Nhiệt độ</h3>
+            <canvas id="tempChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Danh sách -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-green-500 text-white rounded-xl p-6 shadow-md">
+            <h3 class="text-xl font-bold mb-4">Danh sách Thiết bị</h3>
+            <ul>
+              <li class="border-b border-white/30 py-2">Thiết bị 1 - 🟢 Online</li>
+              <li class="border-b border-white/30 py-2">Thiết bị 2 - 🟢 Online</li>
+              <li class="border-b border-white/30 py-2">Thiết bị 3 - 🔴 Offline</li>
+            </ul>
+          </div>
+          <div class="bg-orange-500 text-white rounded-xl p-6 shadow-md">
+            <h3 class="text-xl font-bold mb-4">Danh sách Cảnh báo</h3>
+            <ul>
+              <li class="border-b border-white/30 py-2">[10:30] Nhiệt độ cao ở Thiết bị 2</li>
+              <li class="border-b border-white/30 py-2">[11:15] Điện áp thấp ở Thiết bị 4</li>
+              <li class="border-b border-white/30 py-2">[12:05] Mất kết nối Thiết bị 3</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Chart.js scripts -->
+  <script>
+    const voltageCtx = document.getElementById('voltageChart').getContext('2d');
+    new Chart(voltageCtx, {
+      type: 'line',
+      data: {
+        labels: ["10h", "11h", "12h", "13h", "14h", "15h"],
+        datasets: [{
+          label: 'Điện áp (V)',
+          data: [220, 218, 222, 219, 221, 220],
+          borderWidth: 2,
+          fill: false,
+          borderColor: "blue",
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    const tempCtx = document.getElementById('tempChart').getContext('2d');
+    new Chart(tempCtx, {
+      type: 'line',
+      data: {
+        labels: ["10h", "11h", "12h", "13h", "14h", "15h"],
+        datasets: [{
+          label: 'Nhiệt độ (°C)',
+          data: [65, 68, 70, 72, 74, 75],
+          borderWidth: 2,
+          fill: false,
+          borderColor: "orange",
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // Gọi API FastAPI để lấy dữ liệu mới nhất
+    async function fetchSensorData() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/Lấy dữ liệu từ Database/");
+        const data = await response.json();
+
+        if (data.length > 0) {
+          const latest = data[0]; // bản ghi mới nhất
+
+          // Tính độ rung RMS từ x,y,z
+          const vibration = Math.sqrt(
+            latest.x * latest.x + latest.y * latest.y + latest.z * latest.z
+          ).toFixed(2);
+
+          document.getElementById("vibration").textContent = vibration + " g";
+          document.getElementById("temperature").textContent = latest.temperature + " °C";
+          document.getElementById("current").textContent = latest.current + " A";
+          document.getElementById("voltage").textContent = latest.voltage + " V";
+
+          // Kiểm tra cảnh báo
+          let alerts = [];
+          if (latest.voltage > 240) alerts.push("Điện áp cao");
+          else if (latest.voltage < 200) alerts.push("Điện áp thấp");
+
+          if (latest.temperature > 80) alerts.push("Nhiệt độ cao");
+
+          if (latest.current > 10) alerts.push("Dòng điện cao");
+
+          const alertEl = document.getElementById("systemAlert");
+          if (alerts.length === 0) {
+            alertEl.textContent = "An toàn";
+            alertEl.className = "text-2xl font-bold text-green-600";
+          } else {
+            alertEl.textContent = alerts.join(", ");
+            alertEl.className = "text-2xl font-bold text-red-600";
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      }
+    }
+
+    // Cập nhật dữ liệu mỗi 5 giây
+    fetchSensorData();
+    setInterval(fetchSensorData, 5000);
+  </script>
+</body>
+</html>

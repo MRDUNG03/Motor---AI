@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Giám sát Động cơ Công nghiệp - Lịch sử Sự cố</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Hiệu ứng chuyển động mượt mà cho sidebar */
+    .sidebar-item {
+      transition: all 0.3s ease-in-out;
+    }
+    .sidebar-item:hover {
+      transform: translateX(5px);
+    }
+    /* Hiệu ứng cho main content */
+    .main-content {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Đánh dấu mục active */
+    .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      font-weight: bold;
+      border-left: 4px solid #ffffff;
+    }
+    /* Tùy chỉnh bảng sự cố */
+    .incident-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .incident-table th, .incident-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .incident-table th {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: bold;
+    }
+    .incident-table tr:hover {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl">
+      <div class="p-4 text-2xl font-extrabold border-b border-blue-500/30 flex items-center">
+        <span class="mr-3">⚙️</span>Giám sát Động cơ
+      </div>
+      <nav class="mt-4">
+        <ul>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="home.html" class="flex items-center w-full"><span class="mr-3">🏠</span> Home</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="datarealtime.html" class="flex items-center w-full"><span class="mr-3">📈</span> Dữ Liệu Thời Gian Thực</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="alert.html" class="flex items-center w-full"><span class="mr-3">🔍</span> Chuẩn đoán Lỗi</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item active">
+            <a href="history.html" class="flex items-center w-full"><span class="mr-3">📋</span> Lịch Sử Sự cố</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="settings.html" class="flex items-center w-full"><span class="mr-3">⚙️</span> Cài Đặt</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="#" onclick="logout()" class="flex items-center w-full"><span class="mr-3">🚪</span> Đăng Xuất</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 p-4 main-content overflow-y-auto h-full">
+      <!-- Header -->
+      <div class="flex flex-col items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">Lịch sử Sự cố Động cơ Điện</h1>
+        <p class="text-sm text-gray-500 mt-1">Cập nhật: <span id="current-time" class="font-semibold"></span></p>
+      </div>
+
+      <!-- Bảng hiển thị lịch sử sự cố -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Danh sách Sự cố</h3>
+        <table class="incident-table">
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Thiết bị ID</th>
+              <th>Loại sự cố</th>
+              <th>Thông báo</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="incident-table-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Hàm đăng xuất
+    function logout() {
+      localStorage.removeItem("username");
+      alert("Đăng xuất thành công!");
+      window.location.href = "login.html";
+    }
+
+    // Cập nhật thời gian hiện tại
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleString('vi-VN');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Hàm lấy và hiển thị danh sách sự cố từ API
+    async function fetchAndDisplayIncidents() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/Lấy danh sách cảnh báo', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          throw new Error('Không thể lấy danh sách sự cố từ API');
+        }
+        const incidents = await response.json();
+
+        // Hiển thị sự cố trong bảng
+        const tableBody = document.getElementById('incident-table-body');
+        tableBody.innerHTML = ''; // Xóa nội dung cũ
+        incidents.forEach(incident => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${new Date(incident.timestamp).toLocaleString('vi-VN')}</td>
+            <td>${incident.device_id}</td>
+            <td>${incident.alert}</td>
+            <td>${incident.message}</td>
+            <td>${incident.status}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu:', error);
+        alert('Không thể tải dữ liệu từ server. Vui lòng kiểm tra kết nối hoặc server.');
+      }
+    }
+
+    // Gọi hàm lấy và hiển thị sự cố ngay khi tải trang
+    fetchAndDisplayIncidents();
+
+    // Cập nhật dữ liệu mỗi 10 giây
+    setInterval(fetchAndDisplayIncidents, 10000);
+  </script>
+</body>
+</html>

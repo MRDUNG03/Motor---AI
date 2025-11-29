@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Thiết Bị</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1620712943543-bcc4688e1750?q=80&w=1920&auto=format&fit=crop');">
+    <div class="flex h-screen">
+  <!-- Thanh menu bên trái -->
+        <div class="bg-white w-64 space-y-1 py-4 px-2 shadow-lg absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
+            <div class="flex justify-center mb-4">
+                <img src="https://via.placeholder.com/32" alt="Logo" class="menu-icon">
+            </div>
+            <nav>
+                <a href="#" class="menu-item flex"><span class="menu-icon">🏠</span>Trang Chủ</a>
+                <a href="add_device.html" class="menu-item flex"><span class="menu-icon">★</span>Thêm Thiết Bị</a>
+                <a href="login.html" class="menu-item flex"><span class="menu-icon">⏳</span>Đăng Nhập</a>
+                <hr class="my-2 border-gray-200">
+                <a href="#" class="menu-item flex"><span class="menu-icon">🧑‍🚀</span>Người Dùng</a>
+                <a href="#" class="menu-item flex active"><span class="menu-icon">📚</span>Trạng Thái</a>
+                <a href="#" class="menu-item flex"><span class="menu-icon">🔍</span>Tìm Kiếm</a>
+                <hr class="my-2 border-gray-200">
+                <a href="#" class="menu-item flex"><span class="menu-icon">📋</span>Lịch Sử</a>
+                <a href="#" class="menu-item flex"><span class="menu-icon">🏷️</span>Cảnh Báo</a>
+                <a href="#" class="menu-item flex"><span class="menu-icon">⚙️</span>Cài Đặt</a>
+            </nav>
+        </div>
+        <!-- Nội dung chính -->
+        <div class="flex-1 ml-0 md:ml-64 p-6 overflow-auto">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-10">Thêm Thiết Bị</h1>
+            <div class="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg max-w-md mx-auto" id="addDeviceForm">
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="deviceName">Thêm Thiết Bị</label>
+                    <input class="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="deviceName" placeholder="Nhập tên thiết bị" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="motor">Động cơ</label>
+                    <input class="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="motor" placeholder="Nhập tên động cơ" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="area">Khu vực</label>
+                    <input class="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="area" placeholder="Nhập khu vực" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="date">Ngày thêm</label>
+                    <input class="w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="date" id="date" required>
+                </div>
+                <button onclick="saveDevice()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300">Lưu</button>
+                <div id="message" class="mt-4 text-center text-sm"></div>
+            </div>
+            <div class="text-center mt-10">
+                <button onclick="window.location.href='dashboard.html'" class="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition duration-300">Quay Lại</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function saveDevice() {
+            // Lấy giá trị từ các trường nhập liệu
+            const deviceName = document.getElementById('deviceName').value.trim();
+            const motor = document.getElementById('motor').value.trim();
+            const area = document.getElementById('area').value.trim();
+            const date = document.getElementById('date').value;
+
+            // Kiểm tra nếu các trường bắt buộc được điền
+            if (!deviceName || !motor || !area || !date) {
+                document.getElementById('message').innerHTML = '<span class="text-red-500">Vui lòng điền đầy đủ thông tin!</span>';
+                return;
+            }
+
+            // Tạo đối tượng thiết bị
+            const device = {
+                deviceName: deviceName,
+                motor: motor,
+                area: area,
+                date: date,
+                timestamp: new Date().toISOString()
+            };
+
+            // Lấy danh sách thiết bị từ localStorage (nếu có)
+            let devices = JSON.parse(localStorage.getItem('devices') || '[]');
+
+            // Thêm thiết bị mới
+            devices.push(device);
+
+            // Lưu lại vào localStorage
+            localStorage.setItem('devices', JSON.stringify(devices));
+
+            // Hiển thị thông báo thành công
+            document.getElementById('message').innerHTML = '<span class="text-green-500">Thêm thiết bị thành công!</span>';
+
+            // Xóa form sau 2 giây và chuyển về dashboard
+            setTimeout(() => {
+                document.getElementById('addDeviceForm').reset();
+                document.getElementById('message').innerHTML = '';
+                window.location.href = 'dashboard.html';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

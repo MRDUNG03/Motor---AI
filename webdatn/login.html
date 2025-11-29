@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(to right, #4c51bf, #d53f8c); min-height: 100vh; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 20px; padding:60px; width:500px; height: 500px ;box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+        .input-field { background:#f3f4f6; border:1px solid #e5e7eb; border-radius:7px; padding:8px 12px; font-size:18px; color:#2d3748;}
+        .input-field:focus { outline:none; border-color:#a0aec0;}
+        .login-btn { background:#48bb78; border-radius:10px; padding:10px 0; font-size:16px; color:white; transition: background-color 0.3s;}
+        .login-btn:hover { background:#38a169; }
+    </style>
+</head>
+<body class="gradient-bg flex items-center justify-center">
+    <div class="card text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">Đăng Nhập</h2>
+
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <img src="/logginn.png" alt="Logo" class="w-16 h-16 shadow-xl rounded-none" />
+        </div>
+
+        <div class="mb-4">
+            <div class="input-field flex items-center w-full">
+                <input id="login-username" class="w-full bg-transparent focus:outline-none" type="email" placeholder="Tài khoản" required>
+            </div>
+        </div>
+        <div class="mb-6">
+            <div class="input-field flex items-center w-full">
+                <input id="login-password" class="w-full bg-transparent focus:outline-none" type="password" placeholder="Mật khẩu" required>
+            </div>
+        </div>
+        <button onclick="login()" class="login-btn w-full mb-2">Login</button>
+
+        <div class="flex justify-between text-sm mt-2">
+            <div>
+                Chưa có tài khoản? 
+                <a href="register.html" class="text-blue-600 hover:underline">Đăng ký ngay</a>
+            </div>
+            <div>
+                <a href="forgot-password.html" class="text-red-600 hover:underline">Quên mật khẩu?</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById("login-username").value.trim();
+            const password = document.getElementById("login-password").value.trim();
+            if (!username || !password) { 
+                alert("⚠️ Vui lòng nhập đầy đủ tài khoản và mật khẩu"); 
+                return; 
+            }
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/Đăng nhập tài khoản/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Đăng nhập thành công!");
+                    // Lưu username vào localStorage để dùng ở trang Home
+                    localStorage.setItem("username", result.username || username);
+                    // Chuyển sang Home thay vì Dashboard
+                    window.location.href = "home.html"; 
+                    // window.location.href = "login.html";
+                } else { 
+                    alert(result.message || "❌ Sai tài khoản hoặc mật khẩu"); 
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("🚨 Không kết nối được server!");
+            }
+        }
+    </script>
+</body>
+</html>

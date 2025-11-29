@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Giám sát Động cơ Công nghiệp - Cài đặt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Hiệu ứng chuyển động mượt mà cho sidebar */
+    .sidebar-item {
+      transition: all 0.3s ease-in-out;
+    }
+    .sidebar-item:hover {
+      transform: translateX(5px);
+    }
+    /* Hiệu ứng cho main content */
+    .main-content {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Đánh dấu mục active */
+    .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      font-weight: bold;
+      border-left: 4px solid #ffffff;
+    }
+    /* Tùy chỉnh bảng thiết bị */
+    .device-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .device-table th, .device-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .device-table th {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: bold;
+    }
+    .device-table tr:hover {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl">
+      <div class="p-4 text-2xl font-extrabold border-b border-blue-500/30 flex items-center">
+        <span class="mr-3">⚙️</span>Giám Sát Động Cơ
+      </div>
+      <nav class="mt-4">
+        <ul>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="home.html" class="flex items-center w-full"><span class="mr-3">🏠</span> Home</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="datarealtime.html" class="flex items-center w-full"><span class="mr-3">📈</span> Dữ Liệu Thời Gian Thực</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="alert.html" class="flex items-center w-full"><span class="mr-3">🔍</span> Chuẩn Đoán Lỗi</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="history.html" class="flex items-center w-full"><span class="mr-3">📋</span> Lịch Sử Sự cố</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item active">
+            <a href="settings.html" class="flex items-center w-full"><span class="mr-3">⚙️</span> Cài Đặt</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="#" onclick="logout()" class="flex items-center w-full"><span class="mr-3">🚪</span> Đăng Xuất</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 p-4 main-content overflow-y-auto h-full">
+      <!-- Header -->
+      <div class="flex flex-col items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">Cài đặt Hệ thống</h1>
+        <p class="text-sm text-gray-500 mt-1">Cập nhật: <span id="current-time" class="font-semibold"></span></p>
+      </div>
+
+      <!-- Phần danh sách thiết bị -->
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Danh sách Thiết bị</h3>
+        <table class="device-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên thiết bị</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody id="device-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Phần cài đặt ngưỡng chẩn đoán lỗi -->
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ngưỡng Chẩn đoán Lỗi</h3>
+        <form id="thresholds-form" class="space-y-4">
+          <!-- Nhiệt độ -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Nhiệt độ tối đa (°C):</label>
+            <input type="number" id="temp-threshold" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="80">
+          </div>
+          <!-- Rung động -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Rung động tối đa (mm/s):</label>
+            <input type="number" id="vib-threshold" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="10">
+          </div>
+          <!-- Điện áp -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Điện áp tối thiểu (V):</label>
+            <input type="number" id="volt-min" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="200">
+          </div>
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Điện áp tối đa (V):</label>
+            <input type="number" id="volt-max" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="250">
+          </div>
+          <!-- Dòng điện -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Dòng điện tối đa (A):</label>
+            <input type="number" id="curr-threshold" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="15">
+          </div>
+          <!-- Nút lưu -->
+          <div class="flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Lưu Cài đặt</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Phần cài đặt GFI (Ground Fault Interrupter) -->
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Cài đặt Bảo vệ Lỗi Nối Đất (GFI)</h3>
+        <form id="gfi-form" class="space-y-4">
+          <!-- Ngưỡng dòng rò -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Ngưỡng dòng rò tối đa (mA):</label>
+            <input type="number" id="gfi-leakage" step="0.1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="30">
+          </div>
+          <!-- Thời gian phản ứng -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Thời gian phản ứng (ms):</label>
+            <input type="number" id="gfi-response-time" step="1" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="50">
+          </div>
+          <!-- Độ nhạy -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Độ nhạy (Type A/B):</label>
+            <select id="gfi-sensitivity" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="A">Type A (AC)</option>
+              <option value="B">Type B (AC + DC)</option>
+            </select>
+          </div>
+          <!-- Trạng thái kích hoạt -->
+          <div class="flex items-center space-x-4">
+            <label class="w-48 font-medium text-gray-700">Trạng thái kích hoạt:</label>
+            <select id="gfi-enabled" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="true">Bật</option>
+              <option value="false">Tắt</option>
+            </select>
+          </div>
+          <!-- Nút lưu GFI -->
+          <div class="flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">Lưu Cài đặt GFI</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Hàm đăng xuất
+    function logout() {
+      localStorage.removeItem("username");
+      alert("Đăng xuất thành công!");
+      window.location.href = "login.html";
+    }
+
+    // Cập nhật thời gian hiện tại
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleString('vi-VN');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Hàm lấy và hiển thị danh sách thiết bị từ API
+    async function fetchAndDisplayDevices() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/devices/', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          throw new Error('Không thể lấy danh sách thiết bị từ API');
+        }
+        const devices = await response.json();
+
+        // Hiển thị thiết bị trong bảng
+        const tableBody = document.getElementById('device-table-body');
+        tableBody.innerHTML = ''; // Xóa nội dung cũ
+        devices.forEach(device => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${device.id}</td>
+            <td>${device.device_name}</td>
+            <td>${device.status}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu:', error);
+        alert('Không thể tải danh sách thiết bị từ server. Vui lòng kiểm tra kết nối hoặc server.');
+      }
+    }
+
+    // Tải cài đặt từ localStorage khi trang tải
+    function loadSettings() {
+      const thresholds = JSON.parse(localStorage.getItem('thresholds')) || {};
+      document.getElementById('temp-threshold').value = thresholds.temperature || 80;
+      document.getElementById('vib-threshold').value = thresholds.vibration || 10;
+      document.getElementById('volt-min').value = thresholds.voltageMin || 200;
+      document.getElementById('volt-max').value = thresholds.voltageMax || 250;
+      document.getElementById('curr-threshold').value = thresholds.current || 15;
+
+      const gfiSettings = JSON.parse(localStorage.getItem('gfiSettings')) || {};
+      document.getElementById('gfi-leakage').value = gfiSettings.leakage || 30;
+      document.getElementById('gfi-response-time').value = gfiSettings.responseTime || 50;
+      document.getElementById('gfi-sensitivity').value = gfiSettings.sensitivity || 'A';
+      document.getElementById('gfi-enabled').value = gfiSettings.enabled || 'true';
+    }
+
+    // Lưu cài đặt ngưỡng chẩn đoán lỗi
+    document.getElementById('thresholds-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const thresholds = {
+        temperature: parseFloat(document.getElementById('temp-threshold').value),
+        vibration: parseFloat(document.getElementById('vib-threshold').value),
+        voltageMin: parseFloat(document.getElementById('volt-min').value),
+        voltageMax: parseFloat(document.getElementById('volt-max').value),
+        current: parseFloat(document.getElementById('curr-threshold').value)
+      };
+      localStorage.setItem('thresholds', JSON.stringify(thresholds));
+      alert('Đã lưu cài đặt ngưỡng chẩn đoán lỗi!');
+    });
+
+    // Lưu cài đặt GFI
+    document.getElementById('gfi-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const gfiSettings = {
+        leakage: parseFloat(document.getElementById('gfi-leakage').value),
+        responseTime: parseInt(document.getElementById('gfi-response-time').value),
+        sensitivity: document.getElementById('gfi-sensitivity').value,
+        enabled: document.getElementById('gfi-enabled').value === 'true'
+      };
+      localStorage.setItem('gfiSettings', JSON.stringify(gfiSettings));
+      alert('Đã lưu cài đặt GFI!');
+    });
+
+    // Tải cài đặt và danh sách thiết bị khi trang được tải
+    loadSettings();
+    fetchAndDisplayDevices();
+
+    // Cập nhật danh sách thiết bị mỗi 10 giây
+    setInterval(fetchAndDisplayDevices, 10000);
+  </script>
+</body>
+</html>

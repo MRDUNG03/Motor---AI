@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Giám sát Động cơ Công nghiệp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Hiệu ứng chuyển động mượt mà cho sidebar */
+    .sidebar-item {
+      transition: all 0.3s ease-in-out;
+    }
+    .sidebar-item:hover {
+      transform: translateX(5px);
+    }
+    /* Hiệu ứng cho main content */
+    .main-content {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Tối ưu kích thước biểu đồ */
+    .chart-container {
+      width: 100%;
+      height: 300px; /* Chiều cao lớn để vừa màn hình */
+    }
+    /* Đánh dấu mục active */
+    .sidebar-item.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      font-weight: bold;
+      border-left: 4px solid #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-xl">
+      <div class="p-4 text-2xl font-extrabold border-b border-blue-500/30 flex items-center">
+        <span class="mr-3">⚙️</span>Giám sát Động cơ
+      </div>
+      <nav class="mt-4">
+        <ul>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="home.html" class="flex items-center w-full"><span class="mr-3">🏠</span> Home</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="datarealtime.html" class="flex items-center w-full"><span class="mr-3">📈</span> Dữ Liệu Thời Gian Thực</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="alert.html" class="flex items-center w-full"><span class="mr-3">🔍</span> Chuẩn Đoán Lỗi</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="history.html" class="flex items-center w-full"><span class="mr-3">📋</span> Lịch Sử Sự cố</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="settings.html" class="flex items-center w-full"><span class="mr-3">⚙️</span> Cài Đặt</a>
+          </li>
+          <li class="px-4 py-3 text-lg hover:bg-blue-600/80 cursor-pointer rounded-r-lg flex items-center sidebar-item">
+            <a href="#" onclick="logout()" class="flex items-center w-full"><span class="mr-3">🚪</span> Đăng Xuất</a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 p-4 main-content overflow-y-auto h-full">
+      <!-- Header -->
+      <div class="flex flex-col items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">Giám Sát Trạng Thái Tín Hiệu Động Cơ Điện</h1>
+        <p class="text-sm text-gray-500 mt-1">Cập nhật: <span id="current-time" class="font-semibold"></span></p>
+      </div>
+
+      <!-- Biểu đồ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(100%-4rem)]">
+        <!-- Hàng trên -->
+        <div class="bg-white rounded-xl shadow-lg p-3">
+          <h3 class="text-sm font-semibold text-gray-800 text-center">Nhiệt độ (°C)</h3>
+          <div class="chart-container">
+            <canvas id="temperatureChart"></canvas>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-3">
+          <h3 class="text-sm font-semibold text-gray-800 text-center">Rung động (mm/s)</h3>
+          <div class="chart-container">
+            <canvas id="vibrationChart"></canvas>
+          </div>
+        </div>
+        <!-- Hàng dưới -->
+        <div class="bg-white rounded-xl shadow-lg p-3">
+          <h3 class="text-sm font-semibold text-gray-800 text-center">Điện áp (V)</h3>
+          <div class="chart-container">
+            <canvas id="voltageChart"></canvas>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-3">
+          <h3 class="text-sm font-semibold text-gray-800 text-center">Dòng điện (A)</h3>
+          <div class="chart-container">
+            <canvas id="currentChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Hàm đăng xuất
+    function logout() {
+      localStorage.removeItem("username");
+      alert("Đăng xuất thành công!");
+      window.location.href = "login.html";
+    }
+
+    // Cập nhật thời gian hiện tại
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleString('vi-VN');
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Khởi tạo các biểu đồ
+    const temperatureChart = new Chart(document.getElementById('temperatureChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Nhiệt độ (°C)',
+          data: [],
+          borderColor: 'rgb(34, 197, 94)',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Nhiệt độ (°C)',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Thời gian',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    const vibrationChart = new Chart(document.getElementById('vibrationChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Rung động X (mm/s)',
+            data: [],
+            borderColor: 'rgb(239, 68, 68)',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Rung động Y (mm/s)',
+            data: [],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Rung động Z (mm/s)',
+            data: [],
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Rung động (mm/s)',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Thời gian',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          }
+        },
+        plugins: {
+          legend: { display: true } // Hiển thị legend để phân biệt X, Y, Z
+        }
+      }
+    });
+
+    const voltageChart = new Chart(document.getElementById('voltageChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Điện áp (V)',
+          data: [],
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Điện áp (V)',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Thời gian',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    const currentChart = new Chart(document.getElementById('currentChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Dòng điện (A)',
+          data: [],
+          borderColor: 'rgb(239, 68, 68)',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Dòng điện (A)',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Thời gian',
+              color: 'gray',
+              font: { size: 12 }
+            },
+            ticks: { color: 'gray', font: { size: 10 } },
+            grid: { color: 'rgba(0,0,0,0.1)' }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // Hàm lấy dữ liệu từ API và cập nhật biểu đồ
+    async function fetchSensorData() {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/Lấy dữ liệu từ Database/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Không thể lấy dữ liệu từ API');
+        }
+        const data = await response.json();
+
+        // Xử lý dữ liệu
+        const labels = data.map(item => new Date(item.timestamp).toLocaleTimeString('vi-VN'));
+        const temperatures = data.map(item => item.temperature);
+        const voltages = data.map(item => item.voltage);
+        const currents = data.map(item => item.current);
+        const vibrationX = data.map(item => item.x);
+        const vibrationY = data.map(item => item.y);
+        const vibrationZ = data.map(item => item.z);
+
+        // Cập nhật biểu đồ nhiệt độ
+        temperatureChart.data.labels = labels;
+        temperatureChart.data.datasets[0].data = temperatures;
+        temperatureChart.update();
+
+        // Cập nhật biểu đồ rung động
+        vibrationChart.data.labels = labels;
+        vibrationChart.data.datasets[0].data = vibrationX;
+        vibrationChart.data.datasets[1].data = vibrationY;
+        vibrationChart.data.datasets[2].data = vibrationZ;
+        vibrationChart.update();
+
+        // Cập nhật biểu đồ điện áp
+        voltageChart.data.labels = labels;
+        voltageChart.data.datasets[0].data = voltages;
+        voltageChart.update();
+
+        // Cập nhật biểu đồ dòng điện
+        currentChart.data.labels = labels;
+        currentChart.data.datasets[0].data = currents;
+        currentChart.update();
+
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu:', error);
+        alert('Không thể tải dữ liệu từ server. Vui lòng kiểm tra kết nối hoặc server.');
+      }
+    }
+
+    // Gọi hàm lấy dữ liệu ngay khi tải trang
+    fetchSensorData();
+
+    // Cập nhật dữ liệu mỗi 1 giây
+    setInterval(fetchSensorData, 1000);
+  </script>
+</body>
+</html>
